@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1ddc2c 0%, #6018cd 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            perspective: 1200px;
+        }
+        .game-box {
+            background: linear-gradient(145deg, #16213e 60%, #0f3460 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            width: 420px;
+            box-shadow: 0 16px 40px 0 rgba(83,52,131,0.4), 0 2px 8px 0 rgba(233,69,96,0.15);
+            transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .game-box:hover {
+            box-shadow: 0 24px 60px 0 rgba(109, 220, 4, 0.25), 0 4px 16px 0 rgba(83,52,131,0.25);
+        }
+        h1 {
+            color: #39ee39;
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 8px #533483, 0 1px 0 #fff;
+            letter-spacing: 2px;
+        }
+        p {
+            font-size: 18px;
+            color: #a8a8b3;
+            margin-bottom: 25px;
+            text-shadow: 0 1px 4px #0f3460;
+        }
+        input {
+            padding: 12px;
+            width: 150px;
+            font-size: 18px;
+            border: 2px solid #e94560;
+            border-radius: 10px;
+            background: linear-gradient(120deg, #0f3460 80%, #533483 100%);
+            color: white;
+            text-align: center;
+            outline: none;
+            box-shadow: 0 4px 16px 0 rgba(83,52,131,0.15);
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        input:focus {
+            border-color: #66bb6a;
+            box-shadow: 0 8px 24px 0 rgba(102,187,106,0.15);
+        }
+        input::placeholder {
+            color: #666;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #1ddc2c 0%, #6018cd 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+            box-shadow: 0 4px 16px 0 rgba(233,69,96,0.15);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        button:hover {
+            background: linear-gradient(120deg, #533483 60%, #e94560 100%);
+            box-shadow: 0 8px 24px 0 rgba(233,69,96,0.25);
+            transform: translateY(-2px) scale(1.04);
+        }
+        #playAgainBtn {
+            display: none;
+            margin-top: 20px;
+            padding: 12px 28px;
+            font-size: 18px;
+            background: linear-gradient(120deg, #533483 60%, #e94560 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px 0 rgba(83,52,131,0.15);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+        #playAgainBtn:hover {
+            background: linear-gradient(120deg, #e94560 60%, #533483 100%);
+            box-shadow: 0 8px 24px 0 rgba(83,52,131,0.25);
+            transform: translateY(-2px) scale(1.04);
+        }
+        #result {
+            margin-top: 25px;
+            font-size: 22px;
+            font-weight: bold;
+            min-height: 30px;
+            text-shadow: 0 2px 8px #533483, 0 1px 0 #fff;
+        }
+        #attempts {
+            margin-top: 15px;
+            font-size: 18px;
+            color: #a8a8b3;
+            text-shadow: 0 1px 4px #0f3460;
+        }
+        .too-low {
+            color: #4fc3f7;
+            text-shadow: 0 1px 4px #0f3460;
+        }
+        .too-high {
+            color: #ff7043;
+            text-shadow: 0 1px 4px #0f3460;
+        }
+        .winner {
+            color: #66bb6a;
+            text-shadow: 0 1px 4px #0f3460;
+        }
+        .loser {
+            color: #ef5350;
+            text-shadow: 0 1px 4px #0f3460;
+        }
+        .prev-guesses {
+            margin-top: 15px;
+            font-size: 16px;
+            color: #a8a8b3;
+            text-shadow: 0 1px 4px #0f3460;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-box">
+        <h1>🎯 Guess The Number</h1>
+        <p>I'm thinking of a number between 1 and 100. You have 10 tries!</p>
+
+        <div>
+            <input type="number" id="guessInput" placeholder="Enter guess" min="1" max="100">
+            <button id="guessBtn" onclick="play()">Guess!</button>
+        </div>
+
+        <div id="result"></div>
+        <div id="attempts"></div>
+        <div class="prev-guesses" id="previousGuesses"></div>
+
+        <button id="playAgainBtn" onclick="resetGame()">Play Again 🔄</button>
+    </div>
+<script>
+let secret = Math.floor(Math.random() * 100) + 1;
+let tries = 0;
+let done = false;
+
+function play() {
+    if (done) return;
+    
+    let num = Number(document.getElementById("guessInput").value);
+    
+    if (!num || num < 1 || num > 100) {
+        document.getElementById("result").innerHTML = "Enter 1-100!";
+        return;
+    }
+    
+    tries++;
+    document.getElementById("attempts").innerHTML = tries + " / 10";
+    
+    if (num < secret) {
+        document.getElementById("result").innerHTML = "Too Low!";
+    } else if (num > secret) {
+        document.getElementById("result").innerHTML = "Too High!";
+    } else {
+        document.getElementById("result").innerHTML = "Won! Number was " + secret;
+        done = true;
+        document.getElementById("playAgainBtn").style.display = "inline-block";
+    }
+
+    if (tries >= 10 && num !== secret) {
+        document.getElementById("result").innerHTML = "Lost! It was " + secret;
+        done = true;
+        document.getElementById("playAgainBtn").style.display = "inline-block";
+    }
+
+    document.getElementById("guessInput").value = "";
+    document.getElementById("guessInput").focus();
+}
+
+function reset() {
+    secret = Math.floor(Math.random() * 100) + 1;
+    tries = 0;
+    done = false;
+    document.getElementById("result").innerHTML = "";
+    document.getElementById("attempts").innerHTML = "";
+    document.getElementById("guessInput").value = "";
+    document.getElementById("playAgainBtn").style.display = "none";
+}
+
+document.getElementById("playAgainBtn").onclick = reset;
+</script>
+</body>
+</html>
